@@ -1,4 +1,6 @@
-// ------------------------------------------------------------
+
+  
+  // ------------------------------------------------------------
 // Creating A Snake Game Tutorial With HTML5
 // Copyright (c) 2015 Rembound.com
 // 
@@ -202,7 +204,8 @@ var score = 0;
     // Initialize the game
     function init() {
         // Load images
-        images = loadImages(["snake-graphics.png, snake-graphics2.png, snake-graphics3.png"]);
+        images = loadImages(["snake-graphics.png", "snake-graphics2.png", "snake-graphics3.png"]);
+        
         tileimage = images[0];
     
         // Add mouse events
@@ -228,8 +231,8 @@ var score = 0;
     }
     
     function newGame() {
-        // Initialize the snake
-        snake.init(10, 10, 1, 10, 4);
+        // Initialize the snake (posx, posy, right, speed, segments)
+        snake.init(10, 10, 1, 5, 2);
         
         // Generate the default level
         level.generate();
@@ -375,9 +378,9 @@ var score = 0;
                         score++;
 
     // Check for skin unlocks
-    if (score >= 20 && currentSkin < 2) {
+    if (score >= 2 && currentSkin < 2) {
         currentSkin = 2;
-    } else if (score >= 30 && currentSkin < 3) {
+    } else if (score >= 3 && currentSkin < 3) {
         currentSkin = 3;
     }
                     }
