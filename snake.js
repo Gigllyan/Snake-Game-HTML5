@@ -29,6 +29,8 @@ window.onload = function() {
     var fpstime = 0;
     var framecount = 0;
     var fps = 0;
+var currentSkin = 1;
+var score = 0;
     
     var initialized = false;
     
@@ -200,7 +202,7 @@ window.onload = function() {
     // Initialize the game
     function init() {
         // Load images
-        images = loadImages(["snake-graphics.png"]);
+        images = loadImages(["snake-graphics.png, snake-graphics2.png, snake-graphics3.png"]);
         tileimage = images[0];
     
         // Add mouse events
@@ -371,6 +373,13 @@ window.onload = function() {
                         
                         // Add a point to the score
                         score++;
+
+    // Check for skin unlocks
+    if (score >= 20 && currentSkin < 2) {
+        currentSkin = 2;
+    } else if (score >= 30 && currentSkin < 3) {
+        currentSkin = 3;
+    }
                     }
                     
 
@@ -451,7 +460,11 @@ window.onload = function() {
                     var ty = 3;
                     var tilew = 64;
                     var tileh = 64;
-                    context.drawImage(tileimage, tx*tilew, ty*tileh, tilew, tileh, tilex, tiley, level.tilewidth, level.tileheight);
+                   
+var appleImage = images[currentSkin - 1]; // Adjust for 0-based array
+        
+
+ context.drawImage(appleImage, tx*tilew, ty*tileh, tilew, tileh, tilex, tiley, level.tilewidth, level.tileheight);
                 }
             }
         }
@@ -528,8 +541,11 @@ window.onload = function() {
                 }
             }
             
+
             // Draw the image of the snake part
-            context.drawImage(tileimage, tx*64, ty*64, 64, 64, tilex, tiley,
+var snakeImage = images[currentSkin - 1]; // Adjust for 0-based array
+        
+            context.drawImage(snakeImage, tx*64, ty*64, 64, 64, tilex, tiley,
                               level.tilewidth, level.tileheight);
         }
     }
