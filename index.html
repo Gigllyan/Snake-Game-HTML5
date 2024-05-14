@@ -1,5 +1,7 @@
 <!DOCTYPE html>
+
 <html>
+
 <head>
     <meta charset="UTF-8">
     <title>Snake Game</title>
@@ -213,8 +215,8 @@ Snake.prototype.move = function() {
     }
     
     function newGame() {
-        // Initialize the snake
-        snake.init(10, 10, 1, 10, 4);
+        // Initialize the snake (posx, posy, right, speed, segments)
+        snake.init(10, 10, 1, 5, 2);
         
         // Generate the default level
         level.generate();
@@ -427,17 +429,17 @@ Snake.prototype.move = function() {
                 // Draw tiles based on their type
                 if (tile == 0) {
                     // Empty space
-                    context.fillStyle = "#f7e697";
+                    context.fillStyle = "green";
                     context.fillRect(tilex, tiley, level.tilewidth, level.tileheight);
                 } else if (tile == 1) {
                     // Wall
-                    context.fillStyle = "#bcae76";
+                    context.fillStyle = "#000000";
                     context.fillRect(tilex, tiley, level.tilewidth, level.tileheight);
                 } else if (tile == 2) {
                     // Apple
                     
                     // Draw apple background
-                    context.fillStyle = "#f7e697";
+                    context.fillStyle = "green";
                     context.fillRect(tilex, tiley, level.tilewidth, level.tileheight);
                     
                     // Draw the apple image
@@ -455,12 +457,18 @@ Snake.prototype.move = function() {
     
 	//AKI GPT VEJA A FUNCTION ABAIXO
 // Draw the snake
-// Draw the snake
 function drawSnake() {
     for (var i = 0; i < snake.segments.length; i++) {
         var segment = snake.segments[i];
         var segx = segment.x;
         var segy = segment.y;
+        
+        // Ajustar as coordenadas para as bordas opostas do canvas
+        if (segx < 0) segx = level.columns + segx; // Se a coordenada X for menor que 0, ajustar para o lado direito do canvas
+        if (segx >= level.columns) segx = segx - level.columns; // Se a coordenada X for maior ou igual ao número de colunas, ajustar para o lado esquerdo do canvas
+        if (segy < 0) segy = level.rows + segy; // Se a coordenada Y for menor que 0, ajustar para o lado inferior do canvas
+        if (segy >= level.rows) segy = segy - level.rows; // Se a coordenada Y for maior ou igual ao número de linhas, ajustar para o lado superior do canvas
+        
         var tilex = segx * level.tilewidth;
         var tiley = segy * level.tileheight;
         
