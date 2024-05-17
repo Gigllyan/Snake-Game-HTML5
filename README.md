@@ -8,3 +8,6 @@ This is a code example that belongs to the article: [Creating A Snake Game Tutor
 New Features 
  - skin desbloqueada por nível
  - paredes removidas ao atingir o final da tela o player é transportado para o lado contrario 
+
+Veja demo em 
+[![Creating A Snake Game Tutorial With HTML5](screenshot.png?raw=true)](http://rembound.com/articles/creating-a-snake-game-tutorial-with-html5)
