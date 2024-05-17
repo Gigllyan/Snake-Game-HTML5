@@ -1,52 +1,110 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8">
-<title>Rembound.com Example</title>
-<style>
-  /* Estilo CSS para tornar o canvas responsivo */
-  canvas {
-    width: 100%;
-    height: auto;
-    background-color: #000; /* Cor de fundo para visualização */
-  }
-</style>
-
+    <meta charset="UTF-8">
+    <title>Snake Game</title>
 </head>
 <body>
-<canvas id="viewport" width="640" height="480"></canvas>
+  <header>
+      <button id="level">Level: 1</button>
+      <button id="score">Score: 0</button>
+      <button id="high-score">HighScore: 0</button>
+      <button class="expand" onclick="toggleContent(this)">Opções </button>
+      <div style="display:none;">
+          <button class="expand skins" onclick="toggleContent(this)">skins</button>
+          <div id="skinscontainer" style="display:none;">conteúdo oculto 1</div>
+      
+          <button class="expand" onclick="toggleContent(this)">botão 2</button>
+          <div style="display:none;">conteúdo oculto 2</div>
+     </div>
 
+    <script>
+        function toggleContent(button) {
+            var content = button.nextElementSibling;
 
-
-
-
-
-
-
-<script>
-
+            if (content.style.display === 'none' || content.style.display === '') {
+                content.style.display = 'block';
+            } else {
+                content.style.display = 'none';
+            }
+        }
+    </script>
+  </header>
   
-  // ------------------------------------------------------------
-// Creating A Snake Game Tutorial With HTML5
-// Copyright (c) 2015 Rembound.com
-// 
-// This program is free software: you can redistribute it and/or modify  
-// it under the terms of the GNU General Public License as published by  
-// the Free Software Foundation, either version 3 of the License, or  
-// (at your option) any later version.
-// 
-// This program is distributed in the hope that it will be useful,  
-// but WITHOUT ANY WARRANTY; without even the implied warranty of  
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the  
-// GNU General Public License for more details.  
-// 
-// You should have received a copy of the GNU General Public License  
-// along with this program.  If not, see http://www.gnu.org/licenses/.
-//
-// http://rembound.com/articles/creating-a-snake-game-tutorial-with-html5
-// ------------------------------------------------------------
+    <canvas id="viewport" width="640" height="480"></canvas>
 
-// The function gets called when the window is fully loaded
+        <div id="dados-usuario" style="width: 100%;">
+            Olá,
+            <div id="nome" contenteditable="true">Guest#</div>
+            <div id="deviceId">Device ID: </div>
+            <div id="userId">User ID: </div>
+            <div id="fingerPrint">FingerPrint: </div>
+        </div>
+        
+        
+        
+        
+    <script>
+        let fingerprint = navigator.userAgent + "|" + screen.width + "x" + screen.height + "|" + navigator.language;
+
+        document.addEventListener("DOMContentLoaded", function() {
+            let userData = JSON.parse(localStorage.getItem("userData"));
+
+            if (!userData) {
+                let userId = generateUniqueId();
+                let deviceId = localStorage.getItem("deviceId");
+
+                if (!deviceId) {
+                    deviceId = generateDeviceId();
+                    localStorage.setItem("deviceId", deviceId);
+                }
+
+                let nome = "Guest#" + userId;
+                userData = { userId, deviceId, nome, fingerprint };
+                localStorage.setItem("userData", JSON.stringify(userData));
+            }
+
+            document.getElementById("nome").textContent = userData.nome;
+            document.getElementById("deviceId").textContent += userData.deviceId;
+            document.getElementById("userId").textContent += userData.userId;
+            document.getElementById("fingerPrint").textContent += fingerprint;
+
+            document.getElementById("nome").addEventListener("click", function() {
+                let newName = prompt("Digite um novo nome:");
+                if (newName !== null && newName.trim() !== "") {
+                    userData.nome = newName;
+                    localStorage.setItem("userData", JSON.stringify(userData));
+                    document.getElementById("nome").textContent = newName;
+                }
+            });
+        });
+
+        function generateUniqueId() {
+            return Date.now().toString(36) + Math.random().toString(36).substr(2);
+        }
+
+        function generateDeviceId() {
+            return hashString(fingerprint);
+        }
+
+        function hashString(str) {
+            let hash = 0, i, chr;
+            if (str.length === 0) return hash;
+            for (i = 0; i < str.length; i++) {
+                chr = str.charCodeAt(i);
+                hash = ((hash << 5) - hash) + chr;
+                hash |= 0;
+            }
+            return hash;
+        }
+
+    </script>
+	
+	
+	
+	
+	
+    <script>
 window.onload = function() {
     // Get the canvas and context
     var canvas = document.getElementById("viewport"); 
@@ -57,19 +115,23 @@ window.onload = function() {
     var fpstime = 0;
     var framecount = 0;
     var fps = 0;
-var currentSkin = 1;
-var score = 0;
     
     var initialized = false;
     
     // Images
     var images = [];
+    var foodmages = [];
     var tileimage;
     
     // Image loading global variables
     var loadcount = 0;
     var loadtotal = 0;
     var preloaded = false;
+var currentSkin = 1;
+var score = 0;
+var currentLevel = [];
+let highScore = parseInt(localStorage.getItem('highScore')) || 0;
+document.getElementById('high-score').textContent = 'High Score: ' + highScore;
     
     // Load images
     function loadImages(imagefiles) {
@@ -122,16 +184,20 @@ var score = 0;
     };
     
     // Generate a default level with walls
-    // Geração do nível sem paredes
-Level.prototype.generate = function() {
-    for (var i=0; i<this.columns; i++) {
-        for (var j=0; j<this.rows; j++) {
-            // Apenas espaço vazio
-            this.tiles[i][j] = 0;
+    Level.prototype.generate = function() {
+        for (var i=0; i<this.columns; i++) {
+            for (var j=0; j<this.rows; j++) {
+                if (i == 0 || i == this.columns-1 ||
+                    j == 0 || j == this.rows-1) {
+                    // Add walls at the edges of the level
+                    this.tiles[i][j] = 1;
+                } else {
+                    // Add empty space
+                    this.tiles[i][j] = 0;
+                }
+            }
         }
-    }
-};
-
+    };
     
     
     // Snake
@@ -182,36 +248,34 @@ Level.prototype.generate = function() {
     }
     
     // Move the snake in the direction
-    Snake.prototype.move = function() {
-        // Get the next move and modify the position
-        var nextmove = this.nextMove();
-        this.x = nextmove.x;
-        this.y = nextmove.y;
-    
-        // Get the position of the last segment
-        var lastseg = this.segments[this.segments.length-1];
-        var growx = lastseg.x;
-        var growy = lastseg.y;
-    
-        // Move segments to the position of the previous segment
-        for (var i=this.segments.length-1; i>=1; i--) {
-            this.segments[i].x = this.segments[i-1].x;
-            this.segments[i].y = this.segments[i-1].y;
-        }
-        
-        // Grow a segment if needed
-        if (this.growsegments > 0) {
-            this.segments.push({x:growx, y:growy});
-            this.growsegments--;
-        }
-        
-        // Move the first segment
-        this.segments[0].x = this.x;
-        this.segments[0].y = this.y;
-        
-        // Reset movedelay
-        this.movedelay = 0;
+	// AKI CHATGPT VEJA ESSA FUNCTION
+    // Move the snake in the direction
+Snake.prototype.move = function() {
+    // Move each segment to the position of the segment in front of it
+    for (var i = this.segments.length - 1; i > 0; i--) {
+        this.segments[i].x = this.segments[i - 1].x;
+        this.segments[i].y = this.segments[i - 1].y;
     }
+
+    // The head segment moves to the new location (this.x, this.y)
+    this.segments[0].x = this.x;
+    this.segments[0].y = this.y;
+
+    // If the snake needs to grow, add a new segment at the end
+    if (this.growsegments > 0) {
+        var lastSeg = this.segments[this.segments.length - 1];
+        var secondLastSeg = this.segments[this.segments.length - 2];
+        var newSeg = {x: lastSeg.x - (secondLastSeg.x - lastSeg.x),
+                      y: lastSeg.y - (secondLastSeg.y - lastSeg.y)};
+        
+        this.segments.push(newSeg);
+        this.growsegments--;
+    }
+
+    // Reset move delay
+    this.movedelay = 0;
+};
+
 
     // Create objects
     var snake = new Snake();
@@ -226,9 +290,22 @@ Level.prototype.generate = function() {
     // Initialize the game
     function init() {
         // Load images
-        images = loadImages(["snake-graphics.png", "snake-graphics2.png", "snake-graphics3.png"]);
+        images = loadImages([
+          "snake-graphics.png", 
+          "snake-graphics2.png", 
+          "snake-graphics3.png", 
+          "snake-graphics4.png"
+        ]);
         
         tileimage = images[0];
+        
+        foodImages = loadImages([ 
+            'imgs/food1.png',
+            'imgs/food2.png',
+            'imgs/food3.png',
+            'imgs/food4.png',
+            'imgs/food5.png'
+        ]);
     
         // Add mouse events
         canvas.addEventListener("mousedown", onMouseDown);
@@ -351,74 +428,142 @@ Level.prototype.generate = function() {
         }
     }
     
+	
+	// AKI CHATGPT VEJA ESSA FUNCTION
+	// Update game score and skin
+	function updateScore() {
+	  document.getElementById('score').textContent = 'Score: ' + score;
+	  
+	  
+	  var currentLevel = 1;
+	  // Check for skin unlocks
+	  
+	  // lvl 2
+	  if (score >= 20 && currentSkin < 2) {
+	    currentSkin = 2;
+	    currentLevel = 2;
+	  } // lvl 3
+	  else if (score >= 50 && currentSkin < 3) {
+	    currentSkin = 3;
+	    currentLevel = 3;
+	  } // lvl 4
+	  else if (score >= 90 && currentSkin < 4) {
+	    currentSkin = 4;
+	    currentLevel = 4;
+	 	  } // lvl 5
+	 	else if (score > 150) {
+	    currentLevel = 5;
+	  } else if (highScore >= 20 && currentSkin < 2) {
+	    currentSkin = 2;
+	    
+	  } // lvl 3
+	  else if (highScore >= 50 && currentSkin < 3) {
+	    currentSkin = 3;
+	    
+	  } // lvl 4
+	  else if (highScore >= 90 && currentSkin < 4) {
+	    currentSkin = 4;
+	    
+	 	  } 
+	
+	  document.getElementById('level').textContent = 'Level: ' + currentLevel;
+	
+	  // Update high score if needed
+	  if (score > highScore) {
+	    highScore = score;
+	    localStorage.setItem('highScore', highScore.toString());
+	    document.getElementById('high-score').textContent = 'High Score: ' + highScore;
+	  }
+	
+	  // Add preview image and click event to change snake skin
+	  var skinsContainer = document.getElementById('skinscontainer');
+	  skinsContainer.innerHTML = ''; // Clear previous skins
+	
+	  for (var i = 1; i <= currentSkin; i++) {
+	    var skinPreview = document.createElement('img');
+	    skinPreview.src = 'snake-graphics' + i + '.png'; // Assuming the skin images are named like snake-graphics1.png, snake-graphics2.png, etc.
+	    skinPreview.alt = 'Skin ' + i + ' Preview';
+	    skinPreview.addEventListener('click', function() {
+	      currentSkin = i;
+	      // Update snake skin here
+	    });
+	    skinsContainer.appendChild(skinPreview);
+	  }
+	}
     function updateGame(dt) {
-        // Move the snake
-        if (snake.tryMove(dt)) {
-            // Check snake collisions
-            
-            // Get the coordinates of the next move
-            var nextmove = snake.nextMove();
-            var nx = nextmove.x;
-            var ny = nextmove.y;
-            
-            if (nx >= 0 && nx < level.columns && ny >= 0 && ny < level.rows) {
-                if (level.tiles[nx][ny] == 1) {
-                    // Collision with a wall
-                    gameover = true;
-                }
-                
-                // Collisions with the snake itself
-                for (var i=0; i<snake.segments.length; i++) {
-                    var sx = snake.segments[i].x;
-                    var sy = snake.segments[i].y;
-                    
-                    if (nx == sx && ny == sy) {
-                        // Found a snake part
-                        gameover = true;
-                        break;
-                    }
-                }
-                
-                if (!gameover) {
-                    // The snake is allowed to move
+    // Move the snake
+    if (snake.tryMove(dt)) {
+        // Check snake collisions
 
-                    // Move the snake
-                    snake.move();
-                    
-                    // Check collision with an apple
-                    if (level.tiles[nx][ny] == 2) {
-                        // Remove the apple
-                        level.tiles[nx][ny] = 0;
-                        
-                        // Add a new apple
-                        addApple();
-                        
-                        // Grow the snake
-                        snake.grow();
-                        
-                        // Add a point to the score
-                        score++;
+        // Get the coordinates of the next move
+        var nextmove = snake.nextMove();
+        var nx = nextmove.x;
+        var ny = nextmove.y;
 
-    // Check for skin unlocks
-    if (score >= 2 && currentSkin < 2) {
-        currentSkin = 2;
-    } else if (score >= 3 && currentSkin < 3) {
-        currentSkin = 3;
-    }
-                    }
-                    
+        // Wrap the snake around the canvas in the X direction
+        if (nx >= level.columns) {
+            nx = 0; // Move to the opposite side
+        } else if (nx < 0) {
+            nx = level.columns - 1; // Move to the opposite side
+        }
 
-                }
-            } else {
-                // Out of bounds
+        // Wrap the snake around the canvas in the Y direction
+        if (ny >= level.rows) {
+            ny = 0; // Move to the opposite side
+        } else if (ny < 0) {
+            ny = level.rows - 1; // Move to the opposite side
+        }
+
+        // Update the snake's position
+        snake.x = nx;
+        snake.y = ny;
+
+        // Collisions with the snake itself
+        for (var i = 0; i < snake.segments.length; i++) {
+            var sx = snake.segments[i].x;
+            var sy = snake.segments[i].y;
+
+            if (nx == sx && ny == sy) {
+                // Found a snake part
                 gameover = true;
-            }
-            
-            if (gameover) {
-                gameovertime = 0;
+                break;
             }
         }
+
+        if (!gameover) {
+            // The snake is allowed to move
+
+            // Move the snake
+            snake.move();
+
+            // Check collision with an apple
+            if (level.tiles[nx][ny] == 2) {
+                // Remove the apple
+                level.tiles[nx][ny] = 0;
+
+                // Add a new apple
+                addApple();
+
+                // Grow the snake
+                snake.grow();
+
+                // Add a point to the score
+                score++;
+                
+                updateScore();
+            }
+        }
+           // Update high score if needed
+                    if (score > highScore) {
+                        highScore = score;
+                        localStorage.setItem('highScore', highScore);
+                    }
+
+        if (gameover) {
+            gameovertime = 0;
+        }
     }
+}
     
     function updateFps(dt) {
         if (fpstime > 0.25) {
@@ -485,95 +630,123 @@ Level.prototype.generate = function() {
                     var ty = 3;
                     var tilew = 64;
                     var tileh = 64;
-                   
+					
 var appleImage = images[currentSkin - 1]; // Adjust for 0-based array
-        
+var foodImage;
+context.drawImage(appleImage, tx*tilew, ty*tileh, tilew, tileh, tilex, tiley, level.tilewidth, level.tileheight);
 
- context.drawImage(appleImage, tx*tilew, ty*tileh, tilew, tileh, tilex, tiley, level.tilewidth, level.tileheight);
+
+
                 }
             }
         }
     }
     
     // Draw the snake
-    function drawSnake() {
-        // Loop over every snake segment
-        for (var i=0; i<snake.segments.length; i++) {
-            var segment = snake.segments[i];
-            var segx = segment.x;
-            var segy = segment.y;
-            var tilex = segx*level.tilewidth;
-            var tiley = segy*level.tileheight;
-            
-            // Sprite column and row that gets calculated
-            var tx = 0;
-            var ty = 0;
-            
-            if (i == 0) {
-                // Head; Determine the correct image
-                var nseg = snake.segments[i+1]; // Next segment
-                if (segy < nseg.y) {
-                    // Up
-                    tx = 3; ty = 0;
-                } else if (segx > nseg.x) {
-                    // Right
-                    tx = 4; ty = 0;
-                } else if (segy > nseg.y) {
-                    // Down
-                    tx = 4; ty = 1;
-                } else if (segx < nseg.x) {
-                    // Left
-                    tx = 3; ty = 1;
-                }
-            } else if (i == snake.segments.length-1) {
-                // Tail; Determine the correct image
-                var pseg = snake.segments[i-1]; // Prev segment
-                if (pseg.y < segy) {
-                    // Up
-                    tx = 3; ty = 2;
-                } else if (pseg.x > segx) {
-                    // Right
-                    tx = 4; ty = 2;
-                } else if (pseg.y > segy) {
-                    // Down
-                    tx = 4; ty = 3;
-                } else if (pseg.x < segx) {
-                    // Left
-                    tx = 3; ty = 3;
-                }
-            } else {
-                // Body; Determine the correct image
-                var pseg = snake.segments[i-1]; // Previous segment
-                var nseg = snake.segments[i+1]; // Next segment
-                if (pseg.x < segx && nseg.x > segx || nseg.x < segx && pseg.x > segx) {
-                    // Horizontal Left-Right
-                    tx = 1; ty = 0;
-                } else if (pseg.x < segx && nseg.y > segy || nseg.x < segx && pseg.y > segy) {
-                    // Angle Left-Down
-                    tx = 2; ty = 0;
-                } else if (pseg.y < segy && nseg.y > segy || nseg.y < segy && pseg.y > segy) {
-                    // Vertical Up-Down
-                    tx = 2; ty = 1;
-                } else if (pseg.y < segy && nseg.x < segx || nseg.y < segy && pseg.x < segx) {
-                    // Angle Top-Left
-                    tx = 2; ty = 2;
-                } else if (pseg.x > segx && nseg.y < segy || nseg.x > segx && pseg.y < segy) {
-                    // Angle Right-Up
-                    tx = 0; ty = 1;
-                } else if (pseg.y > segy && nseg.x > segx || nseg.y > segy && pseg.x > segx) {
-                    // Angle Down-Right
-                    tx = 0; ty = 0;
-                }
-            }
-            
+    
+	//AKI GPT VEJA A FUNCTION ABAIXO
 
-            // Draw the image of the snake part
-var snakeImage = images[currentSkin - 1]; // Adjust for 0-based array
+// Draw the snake
+function drawSnake() {
+    for (var i = 0; i < snake.segments.length; i++) {
+        var segment = snake.segments[i];
+        var segx = segment.x;
+        var segy = segment.y;
+        var tilex = segx * level.tilewidth;
+        var tiley = segy * level.tileheight;
+        
+        // Sprite column and row that gets calculated
+        var tx = 0;
+        var ty = 0;
+        
+        if (i == 0) {
+            // Head; Determine the correct image based on the second segment to determine direction
+            var nseg = snake.segments[i + 1]; // Next segment
+            if (segy < nseg.y && Math.abs(segy - nseg.y) < level.rows - 1) {
+                // Up
+                tx = 3; ty = 0;
+            } else if (segx > nseg.x && Math.abs(segx - nseg.x) < level.columns - 1) {
+                // Right
+                tx = 4; ty = 0;
+            } else if (segy > nseg.y && Math.abs(segy - nseg.y) < level.rows - 1) {
+                // Down
+                tx = 4; ty = 1;
+            } else if (segx < nseg.x && Math.abs(segx - nseg.x) < level.columns - 1) {
+                // Left
+                tx = 3; ty = 1;
+            } else if (segy - nseg.y === level.rows - 1) {
+                // Wrap Up to Down
+                tx = 4; ty = 1;
+            } else if (nseg.y - segy === level.rows - 1) {
+                // Wrap Down to Up
+                tx = 3; ty = 0;
+            } else if (segx - nseg.x === level.columns - 1) {
+                // Wrap Left to Right
+                tx = 4; ty = 0;
+            } else if (nseg.x - segx === level.columns - 1) {
+                // Wrap Right to Left
+                tx = 3; ty = 1;
+            }
+        } else if (i == snake.segments.length - 1) {
+            // Tail; Determine the correct image based on the second last segment
+            var pseg = snake.segments[i - 1]; // Previous segment
+            if (pseg.y < segy && Math.abs(pseg.y - segy) < level.rows - 1) {
+                // Up
+                tx = 3; ty = 2;
+            } else if (pseg.x > segx && Math.abs(pseg.x - segx) < level.columns - 1) {
+                // Right
+                tx = 4; ty = 2;
+            } else if (pseg.y > segy && Math.abs(pseg.y - segy) < level.rows - 1) {
+                // Down
+                tx = 4; ty = 3;
+            } else if (pseg.x < segx && Math.abs(pseg.x - segx) < level.columns - 1) {
+                // Left
+                tx = 3; ty = 3;
+            } else if (segy - pseg.y === level.rows - 1) {
+                // Wrap Up to Down
+                tx = 4; ty = 3;
+            } else if (pseg.y - segy === level.rows - 1) {
+                // Wrap Down to Up
+                tx = 3; ty = 2;
+            } else if (segx - pseg.x === level.columns - 1) {
+                // Wrap Left to Right
+                tx = 4; ty = 2;
+            } else if (pseg.x - segx === level.columns - 1) {
+                // Wrap Right to Left
+                tx = 3; ty = 3;
+            }
+        } else {
+            // Body; Determine the correct image
+            var pseg = snake.segments[i - 1]; // Previous segment
+            var nseg = snake.segments[i + 1]; // Next segment
+            if (pseg.x < segx && nseg.x > segx || nseg.x < segx && pseg.x > segx) {
+                // Horizontal Left-Right
+                tx = 1; ty = 0;
+            } else if (pseg.x < segx && nseg.y > segy || nseg.x < segx && pseg.y > segy) {
+                // Angle Left-Down
+                tx = 2; ty = 0;
+            } else if (pseg.y < segy && nseg.y > segy || nseg.y < segy && pseg.y > segy) {
+                // Vertical Up-Down
+                tx = 2; ty = 1;
+            } else if (pseg.y < segy && nseg.x < segx || nseg.y < segy && pseg.x < segx) {
+                // Angle Top-Left
+                tx = 2; ty = 2;
+            } else if (pseg.x > segx && nseg.y < segy || nseg.x > segx && pseg.y < segy) {
+                // Angle Right-Up
+                tx = 0; ty = 1;
+            } else if (pseg.y > segy && nseg.x > segx || nseg.y > segy && pseg.x > segx) {
+                // Angle Down-Right
+                tx = 0; ty = 0;
+            }
+        }
+        
+        // Draw the image of the snake part
+        var snakeImage = images[currentSkin - 1]; // Adjust for 0-based array
         
             context.drawImage(snakeImage, tx*64, ty*64, 64, 64, tilex, tiley,
                               level.tilewidth, level.tileheight);
-        }
-    }
+      }
+}
     
     // Draw text that is centered
     function drawCenterText(text, x, y, width) {
@@ -645,8 +818,15 @@ var snakeImage = images[currentSkin - 1]; // Adjust for 0-based array
     
     // Call init to start the game
     init();
+
+
+
+
+
+
 };
-  
 </script>
 </body>
 </html>
+
+
