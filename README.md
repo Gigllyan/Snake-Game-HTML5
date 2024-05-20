@@ -14,4 +14,4 @@ New Features
  - highScore e dados do usuário salvo em localstore
 
 Veja demo em [Github](https://gigllyan.github.io/cv/projetos/games/snake2/)
-[![Creating A Snake Game Tutorial With HTML5](screenshot.png?raw=true)](https://gigllyan.github.io/cv/projetos/games/snake2/)
+[![Creating A Snake Game Tutorial With HTML5](Screenshot_MOD.jpg?raw=true)](https://gigllyan.github.io/cv/projetos/games/snake2/)
